@@ -21,7 +21,7 @@ abstract sig FileSystem {
 	index: Name -> one File
 } {
 //	all f : files | f.name not in (files - f).name
-//	all f : files | f.name.index.name = f.name
+	all f : files | f.name.index.name = f.name
 //	Name.index = files
 	Name.index = files
 }
@@ -79,17 +79,19 @@ pred updateRepository(r, r' : Repository, f, f', f'' : File) {
 
 pred commit(l, l': Local, r, r':Repository) {
 	all f : l'.files - l.files | one f' : r.files | one f'' : r'.files | updateRepository[r, r', f, f', f'']
-	l.files.name = r.files.name
-	l'.files.name = r'.files.name
+    all lf : l.files | one rf : r.files | lf.name = rf.name and lf.version = rf.version
+    all lf' : l.files | one rf' : r.files | lf'.name = rf'.name and lf'.version = rf'.version
+    all rf : r.files | one lf : l.files | lf.name = rf.name and lf.version = rf.version
+    all rf' : r.files | one lf' : l.files | lf'.name = rf'.name and lf'.version = rf'.version
+
+
 	#(l'.files - l.files) > 0
 }
 
-run commit
-
-run commit for 10 but exactly 2 Local,exactly  2 Repository
+run commit for 6 but exactly 2 Local,exactly  2 Repository
 
 assert FileNameIsUniqueInLocal {
 	all l : FileSystem | all f: l.files, n : f.name | n not in (l.files -f).name
 }
 
-check FileNameIsUniqueInLocal
+//check FileNameIsUniqueInLocal
