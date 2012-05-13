@@ -20,9 +20,7 @@ abstract sig FileSystem {
 	files: set File,
 	index: Name -> one File
 } {
-//	all f : files | f.name not in (files - f).name
 	all f : files | f.name.index.name = f.name
-//	Name.index = files
 	Name.index = files
 }
 
@@ -75,7 +73,23 @@ pred updateRepository(r, r' : Repository, f, f', f'' : File) {
 //     f in l.files 
 }
 
+pred updateRepository2(r, r' : Repository, lf, lf', rf, rf' : File) {
+	lf.location = L
+	lf'.location = L
+	rf.location = R
+	rf'.location = R
 
+	lf.name = lf'.name
+	lf.name = rf.name
+    lf.name = rf'.name
+
+    lf.version != lf'.version
+	rf.version != rf'.version
+	lf.version = rf.version
+    lf'.version = rf'.version
+	r'.files = r.files - rf + rf'
+	r'.index = r.index - (rf.name -> rf) + (rf'.name -> rf')
+}
 
 pred commit(l, l': Local, r, r':Repository) {
 	all f : l'.files - l.files | one f' : r.files | one f'' : r'.files | updateRepository[r, r', f, f', f'']
@@ -88,7 +102,22 @@ pred commit(l, l': Local, r, r':Repository) {
 	#(l'.files - l.files) > 0
 }
 
+
+pred commit2(l, l': Local, r, r':Repository) {
+	all lf' : l'.files - l.files | one lf : lookup[l, lf'.name] | one rf : r.files | one rf' : r'.files | 
+		updateRepository2[r, r', lf, lf', rf, rf']
+    all lf : l.files | one rf : r.files | lf.name = rf.name and lf.version = rf.version
+    all lf' : l.files | one rf' : r.files | lf'.name = rf'.name and lf'.version = rf'.version
+    all rf : r.files | one lf : l.files | lf.name = rf.name and lf.version = rf.version
+    all rf' : r.files | one lf' : l.files | lf'.name = rf'.name and lf'.version = rf'.version
+
+
+	#(l'.files - l.files) > 0
+}
+
 run commit for 6 but exactly 2 Local,exactly  2 Repository
+
+run commit2 for 6 but exactly 2 Local,exactly  2 Repository
 
 assert FileNameIsUniqueInLocal {
 	all l : FileSystem | all f: l.files, n : f.name | n not in (l.files -f).name
