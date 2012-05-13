@@ -4,9 +4,7 @@ abstract sig File {
 	location : one Location
 }
 
-abstract sig Location {
-
-}
+abstract sig Location {}
 
 sig R extends Location {}
 
